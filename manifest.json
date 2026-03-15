@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Herbalife Learning",
+  "version": "1.0.0",
+  "description": "Herbalife Learning Tool - Run custom scripts on Herbalife courses",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": [
+    "*://*.herbalife.com/*",
+    "*://*.myherbalife.com/*",
+    "*://*.intuition.com/*"
+  ],
+  "icons": {
+    "128": "icon.webp"
+  },
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Herbalife Learning Tool",
+    "default_icon": "icon.webp"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; style-src 'self'; object-src 'none';"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["script.js", "styles.css", "icon.webp"],
+      "matches": [
+        "*://*.herbalife.com/*",
+        "*://*.myherbalife.com/*",
+        "*://*.intuition.com/*"
+      ]
+    }
+  ]
+}
