@@ -221,3 +221,28 @@ button:active {
 button:disabled {
   opacity: 0.6;
 }
+
+.footer {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+}
+
+.footer p {
+  margin: 5px 0;
+}
+
+.footer a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.footer a:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
