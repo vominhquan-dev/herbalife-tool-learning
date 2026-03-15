@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCORM Tool - Herbalife Learning</title>
+    <link rel="stylesheet" href="styles.css" />
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎓 SCORM Tool</h1>
+        <p>Herbalife Learning Tool - Standalone Version</p>
+      </div>
+
+      <form id="scormForm">
+        <div class="form-group">
+          <label for="scriptInput"
+            >📝 Custom Script (Leave empty to use script.js):</label
+          >
+          <textarea
+            id="scriptInput"
+            placeholder="(Optional) Paste your custom JavaScript code here...&#10;Leave empty to automatically run script.js from your project"
+          ></textarea>
+        </div>
+
+        <div class="button-group">
+          <button type="submit">▶ Run Script</button>
+          <button type="button" class="btn-secondary" id="resetBtn">
+            🔄 Reset
+          </button>
+          <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+        </div>
+      </form>
+
+      <div id="status" class="status"></div>
+
+      <div id="outputSection" class="output-section">
+        <h3>📋 Output:</h3>
+        <div id="output"></div>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

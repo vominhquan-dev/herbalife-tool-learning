@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "SCORM Tool",
+  "version": "0.0.2",
+  "description": "Extension to run SCORM scripts",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": [
+    "*://*.herbalife.com/*",
+    "*://*.myherbalife.com/*",
+    "*://*.intuition.com/*"
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Open SCORM Tool"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.herbalife.com/*",
+        "*://*.myherbalife.com/*",
+        "*://*.intuition.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; style-src 'self'; object-src 'none';"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["script.js", "styles.css"],
+      "matches": [
+        "*://*.herbalife.com/*",
+        "*://*.myherbalife.com/*",
+        "*://*.intuition.com/*"
+      ]
+    }
+  ]
+}
