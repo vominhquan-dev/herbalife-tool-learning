@@ -22,7 +22,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["script.js", "styles.css", "icon.webp"],
+      "resources": ["styles.css", "icon.webp"],
       "matches": [
         "*://*.herbalife.com/*",
         "*://*.myherbalife.com/*",
