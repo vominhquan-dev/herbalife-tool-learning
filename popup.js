@@ -1,226 +1,127 @@
-// Initialize event listeners
-document.getElementById("scormForm").addEventListener("submit", function (e) {
-  e.preventDefault();
-  runScript();
-});
+const startBtn = document.getElementById("startBtn");
+const resetBtn = document.getElementById("resetBtn");
+const scoreInput = document.getElementById("scoreInput");
+const statusEl = document.getElementById("status");
+const outputEl = document.getElementById("output");
+const outputSection = document.getElementById("outputSection");
+const progressBar = document.getElementById("progressBar");
 
-document.getElementById("resetBtn").addEventListener("click", function () {
-  resetForm();
-});
+startBtn.addEventListener("click", submitScore);
+resetBtn.addEventListener("click", resetForm);
 
-// Load script.js from extension resources
-async function loadScriptFile() {
-  try {
-    const response = await fetch(chrome.runtime.getURL("script.js"));
-    const scriptContent = await response.text();
-    return scriptContent;
-  } catch (error) {
-    console.error("Error loading script.js:", error);
-    return getDefaultScormScript();
+function submitScore() {
+  const score = scoreInput.value;
+  const scoreNum = parseInt(score, 10);
+
+  if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
+    statusEl.textContent = "enter 0-100";
+    statusEl.className = "msg error";
+    return;
   }
-}
 
-function runScript() {
-  const statusEl = document.getElementById("status");
-  const outputEl = document.getElementById("output");
-  const outputSection = document.getElementById("outputSection");
-  const progressBar = document.getElementById("progressBar");
-  const submitBtn = document.querySelector("button[type='submit']");
+  startBtn.disabled = true;
+  progressBar.style.width = "0%";
+  outputEl.textContent = "";
+  statusEl.className = "msg";
+  outputSection.classList.add("active");
 
-  try {
-    // Disable button during execution
-    submitBtn.disabled = true;
+  outputEl.textContent = "…";
+  progressBar.style.width = "25%";
 
-    // Reset progress
-    progressBar.style.width = "0%";
-    progressBar.classList.remove("active");
-    outputEl.innerHTML = "";
-    statusEl.className = "status";
+  setTimeout(() => {
+    progressBar.style.width = "50%";
 
-    // Show output section immediately
-    const runningDiv = document.createElement("div");
-    runningDiv.className = "output-text-running";
-    runningDiv.textContent = "⏳ Running script...";
-    outputEl.appendChild(runningDiv);
-    outputSection.classList.add("active");
-
-    // Start progress animation
-    progressBar.classList.add("active");
-    progressBar.style.width = "25%";
-
-    setTimeout(async () => {
-      progressBar.style.width = "50%";
-
-      // Get script input or load script.js
-      let scriptToRun = document.getElementById("scriptInput").value.trim();
-      if (!scriptToRun) {
-        scriptToRun = await loadScriptFile();
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (!tabs[0]) {
+        fail("no tab");
+        return;
       }
 
-      // Get the active tab and execute script directly
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (!tabs[0]) {
-          handleError(
-            "No active tab found. Please open Herbalife page first.",
-            statusEl,
-            outputEl,
-            outputSection,
-            progressBar,
-            submitBtn,
-          );
-          return;
-        }
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: tabs[0].id },
+          world: "MAIN",
+          func: (v) => {
+            const logs = [];
+            const ol = console.log;
+            const oe = console.error;
+            console.log = (...a) => {
+              logs.push("[L] " + a.join(" "));
+              ol(...a);
+            };
+            console.error = (...a) => {
+              logs.push("[E] " + a.join(" "));
+              oe(...a);
+            };
 
-        // Execute script directly using chrome.scripting.executeScript
-        chrome.scripting.executeScript(
-          {
-            target: { tabId: tabs[0].id },
-            world: "MAIN",
-            func: (scriptContent) => {
-              window.__scormToolLogs = window.__scormToolLogs || [];
-              const originalLog = console.log;
-              const originalError = console.error;
+            try {
+              const s = parseInt(v, 10);
+              const sc = s / 100;
+              const a = window.API || window.parent.API;
+              const a2 = window.API_1484_11 || window.parent.API_1484_11;
 
-              console.log = function (...args) {
-                window.__scormToolLogs.push("[LOG] " + args.join(" "));
-                originalLog.apply(console, args);
-              };
-
-              console.error = function (...args) {
-                window.__scormToolLogs.push("[ERROR] " + args.join(" "));
-                originalError.apply(console, args);
-              };
-
-              try {
-                // Execute the script directly
-                eval(scriptContent);
-                window.__scormToolLogs.push("✅ Script executed successfully!");
-              } catch (error) {
-                window.__scormToolLogs.push(
-                  `❌ Execution Error: ${error.message}`,
-                );
-              } finally {
-                console.log = originalLog;
-                console.error = originalError;
-              }
-
-              return window.__scormToolLogs;
-            },
-            args: [scriptToRun],
-          },
-          (results) => {
-            progressBar.style.width = "75%";
-
-            setTimeout(() => {
-              const logs = results?.[0]?.result || [];
-
-              // Show output
-              outputEl.innerHTML = "";
-
-              const timeDiv = document.createElement("div");
-              timeDiv.textContent = `[${new Date().toLocaleTimeString()}] Executing Script...`;
-              outputEl.appendChild(timeDiv);
-
-              if (logs.length > 0) {
-                logs.forEach((log) => {
-                  const logDiv = document.createElement("div");
-                  logDiv.textContent = log;
-                  outputEl.appendChild(logDiv);
-                });
+              if (a) {
+                logs.push("SCORM 1.2");
+                a.LMSSetValue("cmi.core.lesson_status", "passed");
+                a.LMSSetValue("cmi.core.score.raw", v);
+                a.LMSSetValue("cmi.core.score.max", "100");
+                a.LMSSetValue("cmi.core.score.min", "0");
+                a.LMSCommit("");
+              } else if (a2) {
+                logs.push("SCORM 2004");
+                a2.SetValue("cmi.completion_status", "completed");
+                a2.SetValue("cmi.success_status", "passed");
+                a2.SetValue("cmi.score.scaled", sc.toString());
+                a2.SetValue("cmi.score.raw", v);
+                a2.SetValue("cmi.score.max", "100");
+                a2.SetValue("cmi.score.min", "0");
+                a2.Terminate("");
               } else {
-                const infoDiv = document.createElement("div");
-                infoDiv.className = "output-text-warning";
-                infoDiv.textContent = "ℹ️ Script executed (no output)";
-                outputEl.appendChild(infoDiv);
+                logs.push("no SCORM API");
               }
 
-              const successDiv = document.createElement("div");
-              successDiv.className = "output-text-success";
-              successDiv.textContent = "✅ Script executed successfully!";
-              outputEl.appendChild(successDiv);
+              logs.push("done");
+            } catch (e) {
+              logs.push("err: " + e.message);
+            }
 
-              showStatus("✅ Script executed successfully!", "success");
-
-              // Complete progress
-              progressBar.style.width = "100%";
-
-              setTimeout(() => {
-                progressBar.classList.remove("active");
-                progressBar.style.width = "0%";
-                submitBtn.disabled = false;
-              }, 800);
-            }, 600);
+            console.log = ol;
+            console.error = oe;
+            return logs;
           },
-        );
-      });
-    }, 600);
-  } catch (error) {
-    handleError(
-      error.message,
-      statusEl,
-      outputEl,
-      outputSection,
-      progressBar,
-      submitBtn,
-    );
-  }
+          args: [score],
+        },
+        (results) => {
+          progressBar.style.width = "75%";
+
+          setTimeout(() => {
+            statusEl.textContent = "✅ Complete";
+            statusEl.className = "hint success";
+            outputSection.classList.remove("active");
+
+            progressBar.style.width = "100%";
+            setTimeout(() => {
+              progressBar.style.width = "0%";
+              startBtn.disabled = false;
+            }, 600);
+          }, 400);
+        },
+      );
+    });
+  }, 500);
 }
 
-function getDefaultScormScript() {
-  return `// SCORM 1.2 API
-var api = window.API || window.parent.API;
-if (api) {
-  api.LMSSetValue("cmi.core.lesson_status", "passed");
-  api.LMSSetValue("cmi.core.score.raw", "100");
-  api.LMSCommit("");
-  console.log("✅ SCORM 1.2: Set passed successfully!");
-} else {
-  var api2004 = window.API_1484_11 || window.parent.API_1484_11;
-  if (api2004) {
-    api2004.SetValue("cmi.completion_status", "completed");
-    api2004.SetValue("cmi.success_status", "passed");
-    api2004.SetValue("cmi.score.scaled", "1.0");
-    api2004.Terminate("");
-    console.log("✅ SCORM 2004: Set passed successfully!");
-  } else {
-    console.log("⚠️ No SCORM API found in window or parent frame.");
-  }
-}`;
-}
-
-function handleError(
-  message,
-  statusEl,
-  outputEl,
-  outputSection,
-  progressBar,
-  submitBtn,
-) {
-  const errorDiv = document.createElement("div");
-  errorDiv.className = "output-text-error";
-  errorDiv.textContent = `❌ Error: ${message}`;
-  outputEl.innerHTML = "";
-  outputEl.appendChild(errorDiv);
-  outputSection.classList.add("active");
-  showStatus("❌ Error: " + message, "error");
+function fail(msg) {
+  statusEl.textContent = msg;
+  statusEl.className = "msg error";
   progressBar.style.width = "0%";
-  progressBar.classList.remove("active");
-  submitBtn.disabled = false;
-}
-
-function showStatus(message, type) {
-  const statusEl = document.getElementById("status");
-  statusEl.textContent = message;
-  statusEl.className = "status " + type;
+  startBtn.disabled = false;
 }
 
 function resetForm() {
-  document.getElementById("scormForm").reset();
-  document.getElementById("status").className = "status";
-  document.getElementById("outputSection").classList.remove("active");
-  const progressBar = document.getElementById("progressBar");
+  scoreInput.value = "100";
+  statusEl.className = "msg";
+  outputSection.classList.remove("active");
   progressBar.style.width = "0%";
-  progressBar.classList.remove("active");
-  const submitBtn = document.querySelector("button[type='submit']");
-  submitBtn.disabled = false;
+  startBtn.disabled = false;
 }

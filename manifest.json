@@ -10,19 +10,21 @@
     "*://*.intuition.com/*"
   ],
   "icons": {
-    "128": "icon.webp"
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
   },
   "action": {
     "default_popup": "index.html",
     "default_title": "Herbalife Learning Tool",
-    "default_icon": "icon.webp"
+    "default_icon": "icon128.png"
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; style-src 'self'; object-src 'none';"
   },
   "web_accessible_resources": [
     {
-      "resources": ["script.js", "styles.css", "icon.webp"],
+      "resources": ["styles.css", "icon.webp"],
       "matches": [
         "*://*.herbalife.com/*",
         "*://*.myherbalife.com/*",
