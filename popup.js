@@ -96,9 +96,8 @@ function submitScore() {
 
           setTimeout(() => {
             statusEl.textContent = "✅ Hoàn thành";
-            outputEl.textContent = "✅ Hoàn thành";
-
             statusEl.className = "hint success";
+            outputSection.classList.remove("active");
 
             progressBar.style.width = "100%";
             setTimeout(() => {
